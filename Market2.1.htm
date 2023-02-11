@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market 2.1</title>
+    <style>
+        table th,
+        tr,
+        td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+
+        #table_input input,
+        select {
+            margin: 5px;
+        }
+
+        table {
+            width: 40%;
+        }
+
+        #table_data {
+            width: 50%;
+        }
+    </style>
+
+</head>
+
+<body>
+    <button></button>
+    <center>
+        <h1>MARKET 2.1</h1>
+    </center>
+    <fieldset>
+        <legend>Filter</legend>
+        <label for="filter_nama">Nama : </label>
+        <input type="text" id="filter_nama" placeholder="Nama" oninput="filterNama(this.value)">
+        <br><br>
+        <label for="label_harga">Harga : </label>
+        <input type="number" id="harga1" placeholder="Harga Min" oninput="filterHarga()">
+        <label> - </label>
+        <input type="number" id="harga2" placeholder="Harga Max" oninput="filterHarga()">
+        <br><br>
+        <label for="kategori">Kategori : </label>
+        <select id="kategori" onchange="filterKate(this.value)">
+            <option value="All">All</option>
+            <option value="Fast Food">Fast Food</option>
+            <option value="Electronik">Electronic</option>
+            <option value="Cloth">Cloth</option>
+            <option value="Fruit">Fruit</option>
+        </select>
+        <br><br>
+        <button onclick="onRiset()">Reset</button>
+    </fieldset>
+    <fieldset>
+        <legend>Input Data</legend>
+        <table id="table_input">
+            <tr>
+                <td>
+                    <input type="text" id="nama" placeholder="Nama">
+                </td>
+                <td>
+                    <input type="number" id="harga" placeholder="Harga">
+                </td>
+                <td>
+                    <select id="kat">
+                        <option value="">all</option>
+                        <option value="Fast Food">Fast Food</option>
+                        <option value="Electronic">Electronic</option>
+                        <option value="Cloth">Cloth</option>
+                        <option value="Fruit">Fruit</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" id="stok" placeholder="Stok">
+                </td>
+            </tr>
+        </table>
+        <br><br>
+        <button onclick="inputData()">Input</button>
+    </fieldset>
+    <fieldset>
+        <legend>Table Data</legend>
+        <table id="table_data">
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>Kategori</th>
+                    <th>Nama</th>
+                    <th>Harga</th>
+                    <th>Stok</th>
+                    <th>Beli</th>
+                    <th colspan="2">Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </fieldset>
+    <fieldset>
+        <table id="table_cart">
+            <legend>Cart</legend>
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>Kategori</th>
+                    <th>Nama</th>
+                    <th>Harga</th>
+                    <th>Kuantiti</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <br><br>
+        <button onclick="onPaymen()">Paymen</button>
+    </fieldset>
+    <fieldset>
+        <legend>Paymen</legend>
+        <h2>Detail Transaksi</h2>
+        <div id="trans"></div>
+    </fieldset>
+</body>
+
+</html>
+<script src="./Database.js"></script>
+<script>
+
+    let showData = (data) => {
+        let tbody = document.getElementById(`table_data`).tBodies[0]
+        // console.log(tbody)[0]
+
+        let res = ` `
+        data.forEach((item, index) => {
+            if (index == indeksEdit) {
+                res += `
+            <tr>
+                <td>${item.id}</td>
+                <td>${item.kategori}</td>
+                <td><input type="text" id="nama_edit" value="${item.nama}"></td>
+                <td><input type="number" id="harga_edit" value="${item.harga}"></td>
+                <td><input type="number" id="stok_edit" value="${item.stok}"></td>
+                <td><button onclick="onTambah(${index})" disabled>Tambah</button></td>
+                <td><button onclick="onSave(${index})">Save</button></td>
+                <td><button onclick="onCancel()">Cancel</button></td>
+            </tr>`
+            }
+            else if (produk[index].stok == 0) {
+                res += `` // jika stok produk kosong maka item dalam produk tidak di tampilkan
+
+                // `<tr>
+                //     <td>${item.id}</td>
+                //     <td>${item.kategori}</td>
+                //     <td><input type="text" id="nama_edit" value="${item.nama}"></td>
+                //     <td><input type="number" id="harga_edit" value="${item.harga}"></td>
+                //     <td><input type="number" id="stok_edit" value="${item.stok}"></td>
+                //     <td><button onclick="onTambah(${index})" disabled>Tambah</button></td>
+                //     <td><button onclick="onSave(${index})">Save</button></td>
+                //     <td><button onclick="onCancel()">Cancel</button></td>
+                // </tr>`
+            } else {
+                res += `
+            <tr>
+                <td>${item.id}</td>
+                <td>${item.kategori}</td>
+                <td>${item.nama}</td>
+                <td>Rp. ${item.harga}</td>
+                <td>${item.stok}</td>
+                <td><button onclick="onTambah(${index})">Tambah</button></td>
+                <td><button onclick="onDelete(${index})">Delete</button></td>
+                <td><button onclick="onEdit(${index})">Edit</button></td>
+            </tr>`
+            }
+
+        })
+        tbody.innerHTML = res
+
+    }
+    showData(produk)
+    // console.log(produk)
+
+    let inputData = () => {
+        let nama = document.getElementById(`nama`).value
+        let harga = +document.getElementById(`harga`).value
+        let kategori = document.getElementById("kat").value
+        let stok = +document.getElementById(`stok`).value
+        let id = Date.now()
+
+
+        produk.push(new Produk(id, kategori, nama, harga, stok))
+        showData(produk)
+    }
+    let filterNama = (value) => {
+        // let harga1 = document.getElementById(`harga1`).value
+        // let harga2 = document.getElementById(`harga2`).value
+        // let kates = document.getElementById(`kategori`).value
+
+        // filter berdasarkan nama saja
+        // if (value && !harga1 && !harga2 && !kategori) {
+        let filterByNama = produk.filter(item => {
+            return item.nama.toLowerCase().includes(value.toLowerCase())
+        })
+        console.log(filterByNama)
+        showData(filterByNama)
+        // filter berdasarkan nama dan harga minimal
+        // } //else if (value && harga1 && !harga2 && !kategori) {
+        //     let filterByNama = produk.filter(item => {
+        //         return item.nama.toLowerCase().includes(value.toLowerCase()) && item.harga >= harga1
+        //     })
+        //     console.log(filterByNama)
+        //     showData(filterByNama)
+        //     // filter berdasarkan nama dan harga maxsimal
+        // } else if (value && !harga1 && harga2 && !kategori) {
+        //     let filterByNama = produk.filter(item => {
+        //         return item.nama.toLowerCase().includes(value.toLowerCase()) && item.harga <= harga2
+        //     })
+        //     console.log(filterByNama)
+        //     showData(filterByNama)
+        //     // filter berdasarkan nama harga max min
+        // } else if (value && harga1 && harga2 && !kategori) {
+        //     let filterByNama = produk.filter(item => {
+        //         return item.nama.toLowerCase().includes(value.toLowerCase()) && item.harga >= harga1 && item.harga <= harga2
+        //     })
+        //     console.log(filterByNama)
+        //     showData(filterByNama)
+        // } else if (value && harga1 && harga2 && kategori) {
+        //     let filterByNama = produk.filter(item => {
+        //         return item.nama.toLowerCase().includes(value.toLowerCase()) && item.harga >= harga1 && item.harga <= harga2 && item.kategori == kates
+        //     })
+        //     console.log(filterByNama)
+        //     showData(filterByNama)
+        // } 
+    }
+    let filterHarga = () => {
+        let harga1 = document.getElementById(`harga1`).value
+        let harga2 = document.getElementById(`harga2`).value
+        if (harga1 && !harga2) {
+            let filMinHarga = produk.filter(item => {
+                return item.harga >= harga1
+            })
+            showData(filMinHarga)
+            console.log(filMinHarga)
+        } else if (!harga1 && harga2) {
+            let filMaxHarga = produk.filter(item => {
+                return item.harga <= harga2
+            })
+            showData(filMaxHarga)
+        } else if (!harga1 && !harga2) {
+            showData(produk)
+        } else {
+            let filMaxMin = produk.filter(item => {
+                return item.harga >= harga1 && item.harga <= harga2
+            })
+            showData(filMaxMin)
+        }
+    }
+    let filterKate = () => {
+        let kates = document.getElementById(`kategori`).value
+        let filByKT = produk.filter(item => {
+            return item.kategori == kates
+        })
+        showData(filByKT)
+        console.log(filByKT)
+    }
+    let onRiset = () => {
+        showData(produk)
+    }
+
+
+</script>
+<script>
+    let onEdit = (index) => { // memanfaatkan parameter index untuk input perintah
+        indeksEdit = index
+        showData(produk)
+    }
+    let onCancel = () => {
+        indeksEdit = null
+        showData(produk)
+    }
+    let onDelete = (index) => {
+        produk.splice(index, 1)
+        showData(produk)
+        console.log(index)
+    }
+    let onSave = (index) => {
+        let newNama = document.getElementById(`nama_edit`).value
+        let newHarga = document.getElementById(`harga_edit`).value
+        let newStok = document.getElementById(`stok_edit`).value
+
+        produk[index].nama = newNama
+        produk[index].harga = newHarga
+        produk[index].stok = newStok
+
+        indeksEdit = null //tanya ini kenapa kalau ndak di kasih ini ndak bisa ke save 
+        showData(produk)
+    }
+    let showCart = () => {
+        let tbody = document.getElementById(`table_cart`).tBodies[0]
+        // console.log(tbody)
+
+        let res = ` `
+        cart.forEach((item, indexCart) => {
+            if (paymen == true) {
+                res += `
+             <tr>
+                <td>${item.id}</td> 
+                <td>${item.kategori}</td>
+                <td>${item.nama}</td>
+                <td>Rp. ${item.harga}</td>
+                <td>${item.qty}</td>
+                <td><button onclick="onDelCart(${indexCart})" disabled>Delete</button></td>
+             </tr>`
+            }
+            else {
+                res += `
+             <tr>
+                <td>${item.id}</td>
+                <td>${item.kategori}</td>
+                <td>${item.nama}</td>
+                <td>Rp. ${item.harga}</td>
+                <td>${item.qty}</td>
+                <td><button onclick="onDelCart(${indexCart})">Delete</button></td>
+             </tr>`
+            }
+        })
+        tbody.innerHTML = res
+    }
+    showCart()
+
+    let onTambah = (index) => {
+        let buyProduk = { ...produk[index] }
+        // untuk mengecek ada produk yg sama atau tidak dengan yg kita mau beli
+        let ada = null
+        cart.forEach(item => {
+            if (item.nama == buyProduk.nama) {
+                ada += 1
+            }
+        })
+        if (ada == 1) {
+            // kalau ada maka qty di tambah 1
+            cart.forEach(item => {
+                if (item.nama == buyProduk.nama)
+                    item.qty += 1
+            })
+        } else {
+            // kalau tidak ada maka di push data ke cart
+            buyProduk.qty = 1
+            delete buyProduk.stok //delet properti stok di cart
+
+
+            cart.push(buyProduk)
+            console.log(buyProduk)
+
+        }
+        produk[index].stok -= 1
+        showData(produk)
+        showCart()
+    }
+    let onDelCart = (indexCart) => {
+        cart[indexCart].qty -= 1
+        showCart()
+        console.log(indexCart)
+
+        produk.forEach(item => {
+            if (item.nama == cart[indexCart].nama) {
+                item.stok += 1
+            }
+            showData(produk)
+        })
+    }
+    let onPaymen = () => {
+        paymen = true
+        showCart()
+
+        let divtrans = document.getElementById(`trans`)
+        // console.log(divtrans)
+        // res = ``
+        // cart.forEach(item => {
+        //     let totalPerProduk = item.harga * item.qty
+        //     totalHarga += totalPerProduk  
+        //     res += `
+        //     <p>${item.kategori} ${item.nama} Rp ${item.harga} x ${item.qty} = ${item.harga * item.qty} </p>`
+        // })
+        // res += `<b>Sup Total Rp.${totalHarga}</b> <br>`
+        // res += `<b>Ppn Rp.${totalHarga / 10}</b> <br>`
+        // res += `<b>Total Belanja Rp.${totalHarga +
+        //     (totalHarga / 10)}</b> <br>`
+
+        let totalHarga = 0
+        let res = ``
+
+        cart.forEach(function (item) {
+            totalHarga += item.qty * item.harga
+
+            res += `<p>${item.kategori} ${item.nama} Rp ${item.harga} x ${item.qty} = ${item.harga * item.qty} </p>`
+        })
+        res += `Ppn = Rp. ${totalHarga * 0.1}<br>`
+        res += `Total Harga = Rp. ${totalHarga + (totalHarga * 0.1)}`
+
+        divtrans.innerHTML = res
+    }
+</script>
